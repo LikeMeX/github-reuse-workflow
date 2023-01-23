@@ -1,0 +1,59 @@
+name: Deploy to cluster
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      docker-image: 
+        required: true
+        type: string
+      docker-tag: 
+        required: true
+        type: string
+      workload_identity_provider:
+        required: true
+        type: string
+      service_account:
+        required: true
+        type: string
+      GKE_CLUSTER: 
+        required: true
+        type: string
+      GKE_ZONE:
+        required: true
+        type: string
+    secrets:
+      GH_PAT:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Auth GCP 
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ inputs.workload_identity_provider }}
+          service_account: ${{ inputs.service_account }}
+
+      # Setup gcloud CLI
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      # Get the GKE credentials so we can deploy to the cluster
+      - name: Auth GKE Cluster
+        run: |-
+          gcloud container clusters get-credentials ${{ inputs.GKE_CLUSTER }} --zone ${{ inputs.GKE_ZONE }}
+
+      - name: Deploy
+        run: |-
+          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.docker-image }} fs-app-chart/ --values deploy/values-dev.yaml
