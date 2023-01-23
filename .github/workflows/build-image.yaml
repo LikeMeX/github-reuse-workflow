@@ -18,6 +18,9 @@ on:
       build-platforms: 
         type: string
         default: linux/arm64
+      build-args: 
+        type: string
+        default: ""
       workload_identity_provider:
         required: true
         type: string
@@ -58,5 +61,6 @@ jobs:
           platforms: ${{ inputs.build-platforms }}
           push: true
           tags: ${{ inputs.docker-image }}:${{ inputs.docker-tag }}
+          build-args: ${{ inputs.build-args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
