@@ -30,6 +30,9 @@ on:
 
 jobs:
   build-image:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
