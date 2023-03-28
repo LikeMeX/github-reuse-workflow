@@ -27,6 +27,9 @@ on:
       service_account:
         required: true
         type: string
+      project_id:
+        required: true
+        type: string
 
 jobs:
   build-image:
@@ -46,6 +49,7 @@ jobs:
         with:
           workload_identity_provider: ${{ inputs.workload_identity_provider }}
           service_account: ${{ inputs.service_account }}
+          project_id: ${{ inputs.project_id }}
 
       # This example uses the docker login action
       - name: Auth GCP 
