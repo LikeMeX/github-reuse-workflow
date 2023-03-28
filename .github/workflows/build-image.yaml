@@ -24,9 +24,9 @@ on:
       build-args: 
         type: string
         default: ""
-      workload_identity_provider:
-        required: true
-        type: string
+      # workload_identity_provider:
+      #   required: true
+      #   type: string
       service_account:
         required: true
         type: string
