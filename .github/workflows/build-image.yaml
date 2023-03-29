@@ -2,9 +2,9 @@ name: Build image
 
 on:
   workflow_call:
-    secrets:
-      workload_identity_provider:
-        required: true
+    # secrets:
+    #   workload_identity_provider:
+    #     required: true
     inputs:
       docker-registry:
         default: asia.gcr.io
@@ -24,9 +24,9 @@ on:
       build-args: 
         type: string
         default: ""
-      # workload_identity_provider:
-      #   required: true
-      #   type: string
+      workload_identity_provider:
+        required: true
+        type: string
       service_account:
         required: true
         type: string
@@ -53,7 +53,7 @@ jobs:
         with:
           token_format: 'access_token'
           project_id: ${{ inputs.project_id }}
-          workload_identity_provider: ${{ secrets.workload_identity_provider }}
+          workload_identity_provider: ${{ inputs.workload_identity_provider }}
           service_account: ${{ inputs.service_account }}
 
       # This example uses the docker login action
