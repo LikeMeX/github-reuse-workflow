@@ -24,6 +24,9 @@ on:
       GKE_ZONE:
         required: true
         type: string
+      RELEASE_NAME:
+        required: true
+        type: string
     secrets:
       GH_PAT:
         required: true
@@ -62,4 +65,4 @@ jobs:
 
       - name: Deploy
         run: |-
-          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.docker-image }} fs-app-chart/ --values deploy/values-dev.yaml
+          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ --values deploy/values-dev.yaml
