@@ -65,4 +65,4 @@ jobs:
 
       - name: Deploy
         run: |-
-          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ --values deploy/values-dev.yaml
+          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ --values deploy/values-dev.yaml --set image.tag=${{ inputs.docker-tag }}
