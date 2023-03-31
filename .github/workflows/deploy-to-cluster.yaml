@@ -46,7 +46,7 @@ jobs:
 
       - name: Copy values file
         run: |-
-          cp deploy/values-${{ inputs.environment }}.yaml deploy/values.yaml
+          sed "s=<DOCKER_TAG>=${{ inputs.docker-tag }}=g" < ./deploy/values-${{ inputs.environment }}.yaml > ./deploy/values.yaml
 
       - name: Auth GCP 
         id: auth
@@ -69,4 +69,4 @@ jobs:
 
       - name: Deploy
         run: |-
-          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ --values deploy/values.yaml --set image.tag=${{ inputs.docker-tag }}
+          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ --values deploy/values.yaml
