@@ -31,7 +31,6 @@ on:
         required: true
         type: string
       project_id:
-        required: true
         type: string
 
 jobs:
