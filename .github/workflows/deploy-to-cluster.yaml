@@ -46,7 +46,7 @@ jobs:
 
       - name: Copy values file
         run: |-
-          cp deploy/values-${{ environment }}.yaml deploy/values.yaml
+          cp deploy/values-${{ inputs.environment }}.yaml deploy/values.yaml
 
       - name: Auth GCP 
         id: auth
