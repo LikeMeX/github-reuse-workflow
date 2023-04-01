@@ -44,9 +44,9 @@ jobs:
           submodules: true
           token: ${{ secrets.GH_PAT || github.token }}
 
-      # - name: Copy values file
-      #   run: |-
-      #     sed "s=<DOCKER_TAG>=${{ inputs.docker-tag }}=g" < ./deploy/values-${{ inputs.environment }}.yaml > ./deploy/values.yaml
+      - name: Copy values file
+        run: |-
+          sed "s=<DOCKER_TAG>=${{ inputs.docker-tag }}=g" < ./deploy/values-${{ inputs.environment }}.yaml > ./deploy/values.yaml
 
       - name: Auth GCP 
         id: auth
@@ -69,4 +69,4 @@ jobs:
 
       - name: Deploy
         run: |-
-          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ --values deploy/values.yaml
+          helm upgrade --install --atomic --timeout 300s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ --f deploy/values.yaml
