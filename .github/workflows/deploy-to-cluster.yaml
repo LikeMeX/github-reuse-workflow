@@ -69,4 +69,4 @@ jobs:
 
       - name: Deploy
         run: |-
-          helm upgrade --install --atomic --timeout 600s -n ${{ inputs.environment }} ${{ inputs.RELEASE_NAME }} fs-app-chart/ -f deploy/values.yaml
+          helm upgrade --install --atomic --timeout 600s ${{ inputs.RELEASE_NAME }} -f deploy/values.yaml fs-app-chart/ --namespace ${{ inputs.environment }} --create-namespace
