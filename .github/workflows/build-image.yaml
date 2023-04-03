@@ -72,7 +72,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          platforms: ${{ inputs.build-platforms }}
+          # platforms: ${{ inputs.build-platforms }}
           push: true
           tags: ${{ inputs.docker-image }}:${{ inputs.docker-tag }}
           build-args: ${{ inputs.build-args }}
