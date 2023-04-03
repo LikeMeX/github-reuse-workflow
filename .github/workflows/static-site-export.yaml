@@ -6,9 +6,6 @@ on:
       tag-version: 
         required: true
         type: string
-      env:
-        required: false
-        type: string
 
 jobs:
   static-site-export:
