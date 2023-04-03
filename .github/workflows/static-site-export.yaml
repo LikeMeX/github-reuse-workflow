@@ -1,0 +1,49 @@
+name: Static site export
+
+on:
+  workflow_call:
+    inputs:
+      tag-version: 
+        required: true
+        type: string
+      env:
+        required: false
+        type: string
+
+jobs:
+  static-site-export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8
+          run_install: false
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm i --frozen-lockfile
+
+      - name: Prune dependencies
+        run: pnpm prune --prod
+
+      - name: Set env
+        run: cp env/.env.${{ inputs.env }} .env
+
+      - run: pnpm export
+        env:
+          TAG_VERSION: ${{ inputs.tag-version }}
+
+      - name: Upload out artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: out
+          path: out
