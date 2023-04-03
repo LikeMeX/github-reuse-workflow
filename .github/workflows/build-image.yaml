@@ -56,12 +56,13 @@ jobs:
           workload_identity_provider: ${{ inputs.workload_identity_provider }}
           service_account: ${{ inputs.service_account }}
 
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: ${{ inputs.setup-platforms }}
-      # Set up buildx     
+      # -
+      #   name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v2
+      #   with:
+      #     platforms: ${{ inputs.setup-platforms }}
+      
+          # Set up buildx     
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2      
