@@ -16,11 +16,11 @@ on:
         required: true
         type: string
       setup-platforms:
-        default: arm64
+        default: amd64
         type: string
       build-platforms: 
         type: string
-        default: linux/arm64
+        default: linux/amd64
       build-args: 
         type: string
         default: ""
@@ -55,6 +55,11 @@ jobs:
           project_id: ${{ inputs.project_id }}
           workload_identity_provider: ${{ inputs.workload_identity_provider }}
           service_account: ${{ inputs.service_account }}
+          
+      # -
+      #   name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v2
+    
       # Set up buildx     
       -
         name: Set up Docker Buildx
@@ -69,10 +74,10 @@ jobs:
           password: '${{ steps.auth.outputs.access_token }}'  
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
-          # platforms: ${{ inputs.build-platforms }}
+          platforms: ${{ inputs.build-platforms }}
           push: true
           tags: ${{ inputs.docker-image }}:${{ inputs.docker-tag }}
           build-args: ${{ inputs.build-args }}
