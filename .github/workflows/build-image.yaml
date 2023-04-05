@@ -21,7 +21,7 @@ on:
       build-platforms: 
         type: string
         default: linux/amd64
-      build-contexts: 
+      build-args: 
         type: string
         default: ""
       workload_identity_provider:
@@ -82,6 +82,6 @@ jobs:
           platforms: ${{ inputs.build-platforms }}
           push: true
           tags: ${{ inputs.docker-image }}:${{ inputs.docker-tag }}
-          build-contexts: ${{ inputs.build-contexts }}
+          build-args: ${{ inputs.build-args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
