@@ -3,6 +3,10 @@ name: Static site export
 on:
   workflow_call:
     inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: string
       tag-version: 
         required: true
         type: string
