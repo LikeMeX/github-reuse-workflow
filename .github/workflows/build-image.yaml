@@ -83,7 +83,7 @@ jobs:
           push: true
           tags: ${{ inputs.docker-image }}:${{ inputs.docker-tag }}
           build-args: |
-            - ENVFILE=env/.env.${{ inputs.environment }}
-            - ENV=${{ inputs.environment }}
+            ENVFILE=env/.env.${{ inputs.environment }}
+            ENV=${{ inputs.environment }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
