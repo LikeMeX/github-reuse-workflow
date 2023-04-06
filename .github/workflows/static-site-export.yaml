@@ -39,6 +39,10 @@ jobs:
       - name: Set env
         run: cp env/.env.${{ inputs.environment }} .env
 
+      - run: pnpm build
+        env:
+          TAG_VERSION: ${{ inputs.tag-version }}
+
       - run: pnpm export
         env:
           TAG_VERSION: ${{ inputs.tag-version }}
