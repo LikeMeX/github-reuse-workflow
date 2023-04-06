@@ -33,9 +33,6 @@ jobs:
       - name: Install dependencies
         run: pnpm i --frozen-lockfile
 
-      - name: Prune dependencies
-        run: pnpm prune --prod
-
       - name: Set env
         run: cp env/.env.${{ inputs.environment }} .env
 
