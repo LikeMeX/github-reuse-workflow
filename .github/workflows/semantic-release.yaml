@@ -25,7 +25,7 @@ jobs:
       latest_tag: ${{ steps.latest-tag.outputs.latest_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Semantic release
         uses: cycjimmy/semantic-release-action@v3
