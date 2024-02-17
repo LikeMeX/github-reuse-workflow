@@ -55,17 +55,12 @@ jobs:
           workload_identity_provider: ${{ inputs.workload_identity_provider }}
           service_account: ${{ inputs.service_account }}
 
-      # Setup gcloud CLI
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-
-      # Get the GKE credentials so we can deploy to the cluster
       - name: Auth GKE Cluster
-        run: |-
-          gcloud components install gke-gcloud-auth-plugin
-          gke-gcloud-auth-plugin --version
-          export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-          gcloud container clusters get-credentials ${{ inputs.GKE_CLUSTER }} --zone ${{ inputs.GKE_ZONE }}
+        id: get-credentials
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: ${{ inputs.GKE_CLUSTER }}
+          location: ${{ inputs.GKE_ZONE }}
 
       - name: Deploy
         run: |-
