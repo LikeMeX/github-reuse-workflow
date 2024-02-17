@@ -62,6 +62,10 @@ jobs:
           cluster_name: ${{ inputs.GKE_CLUSTER }}
           location: ${{ inputs.GKE_ZONE }}
 
+      - name: Add ConfigMap
+        run: |-
+          kubectl create configmap ${{ inputs.RELEASE_NAME }} --from-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy
         run: |-
           helm upgrade --install --atomic --timeout 600s ${{ inputs.RELEASE_NAME }} -f deploy/values.yaml fs-app-chart/ --namespace ${{ inputs.environment }} --create-namespace
