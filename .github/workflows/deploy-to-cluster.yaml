@@ -68,4 +68,4 @@ jobs:
 
       - name: Add ConfigMap
         run: |-
-          kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
