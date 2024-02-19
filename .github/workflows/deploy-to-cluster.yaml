@@ -27,6 +27,9 @@ on:
       RELEASE_NAME:
         required: true
         type: string
+      map_env_to_config:
+        type: boolean
+        default: true
     secrets:
       GH_PAT:
         required: true
@@ -63,6 +66,7 @@ jobs:
           location: ${{ inputs.GKE_ZONE }}
 
       - name: Add ConfigMap
+        if: ${{ inputs.map_env_to_config }}
         run: |-
           kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
 
