@@ -65,10 +65,14 @@ jobs:
           cluster_name: ${{ inputs.GKE_CLUSTER }}
           location: ${{ inputs.GKE_ZONE }}
 
-      - name: Add ConfigMap
+      - name: Diff ConfigMap
         if: ${{ inputs.map_env_to_config }}
         run: |-
           kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl diff -f -
+
+      - name: Apply ConfigMap
+        if: ${{ inputs.map_env_to_config }}
+        run: |-
           kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy
