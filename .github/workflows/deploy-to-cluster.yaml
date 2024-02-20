@@ -68,7 +68,7 @@ jobs:
       - name: Add ConfigMap
         if: ${{ inputs.map_env_to_config }}
         run: |-
-          kubectl diff -f ${{ inputs.RELEASE_NAME }}-my-app --namespace ${{ inputs.environment }}
+          kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl diff -f - 
           kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy
