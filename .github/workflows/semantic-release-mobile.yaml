@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT || github.token  }}
         with:
           semantic_version: 19
-          tag_format: v{version}+${{ inputs.BUILD_NUMBER }}
+          tag_format: v${version}+${{ inputs.BUILD_NUMBER }}
 
       - name: Do something when a new release published
         if: steps.semantic.outputs.new_release_published == 'true'
