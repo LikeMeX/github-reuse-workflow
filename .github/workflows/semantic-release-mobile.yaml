@@ -63,4 +63,4 @@ jobs:
           echo $LATEST_TAG_V
           LATEST_TAG=${LATEST_TAG_V:1}
           echo $LATEST_TAG
-          echo "latest_tag=$LATEST_TAG + ${{ inputs.BUILD_NUMBER }} " >> $GITHUB_OUTPUT
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
