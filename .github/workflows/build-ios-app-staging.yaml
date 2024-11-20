@@ -1,0 +1,80 @@
+name: build-ios-app-staging
+on:
+  workflow_call:
+    inputs:
+      LASTEST_VERSION_BUILD:
+        description: "Lastest version build"
+        required: true
+        type: string
+      LASTEST_VERSION_NAME:
+        description: "Lastest version name"
+        required: true
+        type: string
+    secrets:
+      FIREBASE_DISTRIBUTION_IOS_APP_ID:
+        description: "Firebase Distribution iOS App ID"
+        required: true
+      MATCH_KEYCHAIN_PASSWORD:
+        description: "Match Keychain Password"
+        required: true
+      ASC_KEY_ID:
+        description: "ASC Key ID"
+        required: true
+      ASC_ISSUER_ID:
+        description: "ASC Issuer ID"
+        required: true
+      ASC_KEY_P8:
+        description: "ASC Key P8"
+        required: true
+      MATCH_GIT_BASIC_AUTHORIZATION:
+        description: "GitHub Personal Access Token"
+        required: true
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Set up git and fetch all history for all branches and tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download a required file artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: key-dist
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.5"
+      - name: move .env file
+        run: |
+          mv env ./lib/.env
+          cat ./lib/.env
+      - name: Bundle install for iOS Gemfile
+        timeout-minutes: 5
+        run: |
+          cd ./ios && bundle install
+          gem update --system
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.1"
+          architecture: x64
+          cache: true
+      - run: flutter pub get
+      - run: flutter packages pub run build_runner build --delete-conflicting-outputs
+      - name: Build and Deploy to TestFlight
+        env:
+          FIREBASE_DISTRIBUTION_IOS_APP_ID: ${{ secrets.FIREBASE_DISTRIBUTION_IOS_APP_ID }}
+          MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION}}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID}}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID}}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8}}
+          LASTEST_VERSION_BUILD: ${{ inputs.LASTEST_VERSION_BUILD }}
+          LASTEST_VERSION_NAME: ${{inputs.LASTEST_VERSION_NAME }}
+        run: |
+          cd ./ios
+          export MATCH_PASSWORD="${{ secrets.MATCH_KEYCHAIN_PASSWORD }}" 
+          export MATCH_GIT_BASIC_AUTHORIZATION="${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}" 
+          pod install
+          bundle exec fastlane staging

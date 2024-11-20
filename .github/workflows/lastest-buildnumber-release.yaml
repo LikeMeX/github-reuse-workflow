@@ -1,0 +1,167 @@
+name: Get lastest build number from platform
+on:
+  workflow_call:
+    secrets:
+      GH_PAT:
+        description: "GitHub Personal Access Token"
+        required: true
+      MATCH_GIT_BASIC_AUTHORIZATION:
+        description: "GitHub Personal Access Token"
+        required: true
+      FIREBASE_DISTRIBUTION_IOS_APP_ID:
+        description: "Firebase Distribution iOS App ID"
+        required: true
+      FIREBASE_DISTRIBUTION_ANDROID_APP_ID:
+        description: "Firebase Distribution Android App ID"
+        required: true
+      MATCH_KEYCHAIN_PASSWORD:
+        description: "Match Keychain Password"
+        required: true
+      ASC_KEY_ID:
+        description: "ASC Key ID"
+        required: true
+      ASC_ISSUER_ID:
+        description: "ASC Issuer ID"
+        required: true
+      ASC_KEY_P8:
+        description: "ASC Key P8"
+        required: true
+      FIREBASE_DISTRIBUTION_GOOGLE_SECREAT:
+        description: "Firebase Distribution iOS App ID"
+        required: true
+      GHA_PUBLISH_JSON_STAGING:
+        description: "GHA Publish JSON Staging"
+        required: true
+      KEYSTORE:
+        description: "keystore jks file"
+        required: true
+      KEYSTORE_PASSWORD:
+        description: "keystore password"
+        required: true
+      KEYSTORE_KEY_ALIAS:
+        description: "keystore key alias"
+        required: true
+      KEYSTORE_KEY_PASSWORD:
+        description: "keystore key password"
+        required: true
+      ENV:
+        description: "ENV file"
+        required: true
+    outputs:
+      lastest_build_number:
+        description: "Lastest build number from platform"
+        value: ${{ jobs.compare-build-number.outputs.lastest_build_number }}
+jobs:
+  create-required-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Current directory
+        run: |
+          pwd
+      - name: Create key-dist directory
+        run: |
+          mkdir key-dist
+      - name: Create file google services for access firebase distribution
+        run: |
+          echo $DATA > ./key-dist/GOOGLE_SERVICES_JSON.json | base64
+        env:
+          DATA: ${{ secrets.FIREBASE_DISTRIBUTION_GOOGLE_SECREAT }}
+      - name: Create google service json for access play store file
+        run: |
+          echo $GHA_PUBLISH_JSON_STAGING >> ./key-dist/GHA_PUBLISH_JSON.json | base64
+        env:
+          GHA_PUBLISH_JSON_STAGING: ${{ secrets.GHA_PUBLISH_JSON_STAGING }}
+      - name: Prepare Keystore
+        run: |
+          cd ./key-dist
+          echo "${{secrets.KEYSTORE}}" | base64 --decode >> keystore.jks
+      - name: Prepare Key.properties
+        run: |
+          cd ./key-dist
+          echo "storeFile=${GITHUB_WORKSPACE}/keystore.jks" &>> key.properties
+          echo "keyPassword=${{secrets.KEYSTORE_PASSWORD}}" &>> key.properties
+          echo "keyAlias=${{secrets.KEYSTORE_KEY_ALIAS}}" &>> key.properties
+          echo "storePassword=${{secrets.KEYSTORE_KEY_PASSWORD}}" &>> key.properties
+      - name: Prepare ENV
+        run: |
+          cd ./key-dist
+          echo '${{secrets.ENV}}' >> env
+      - name: Upload to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: key-dist
+          path: ./key-dist
+          retention-days: 1
+          if-no-files-found: error
+  fastlane-buildnumbers:
+    outputs:
+      BUILD_NUM_IOS: ${{ steps.get-build-number-fastlane.outputs.BUILD_NUM_IOS }}
+      BUILD_NUM_ANDROID: ${{ steps.get-build-number-fastlane.outputs.BUILD_NUM_ANDROID }}
+    timeout-minutes: 5
+    needs: create-required-file
+    runs-on: macos-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+      - name: Current directory
+        run: |
+          ls -la
+      - name: Download a required file artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: key-dist
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.5"
+      - name: Bundle install for iOS Gemfile
+        run: |
+          cd ./ios && bundle install
+          pwd
+          gem update --system
+      - name: Bundle install for Android Gemfile
+        run: |
+          cd ./android && bundle install
+          pwd
+          gem update --system
+      - id: run-ios-fastlane
+        name: run ios fastlane
+        env:
+          FIREBASE_DISTRIBUTION_IOS_APP_ID: ${{ secrets.FIREBASE_DISTRIBUTION_IOS_APP_ID }}
+          MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.GH_PAT}}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID}}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID}}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8}}
+        run: |
+          cd ./ios
+          export MATCH_PASSWORD="${{ secrets.MATCH_KEYCHAIN_PASSWORD }}"
+          bundle exec fastlane add_plugin firebase_app_distribution
+          bundle exec fastlane get_latest_build_number
+      - id: run-android-fastlane
+        name: run android fastlane
+        env:
+          FIREBASE_DISTRIBUTION_ANDROID_APP_ID: ${{ secrets.FIREBASE_DISTRIBUTION_ANDROID_APP_ID }}
+        run: |
+          cd ./android
+          bundle exec fastlane add_plugin firebase_app_distribution
+          bundle exec fastlane get_latest_build_number
+      - id: get-build-number-fastlane
+        name: Print the latest build number
+        run: |
+          echo "BUILD_NUM_ANDROID=${{ env.BUILD_NUM_ANDROID }}" >> "$GITHUB_OUTPUT"
+          echo "BUILD_NUM_IOS=${{ env.BUILD_NUM_IOS }}" >> "$GITHUB_OUTPUT"
+  compare-build-number:
+    runs-on: ubuntu-latest
+    needs: [fastlane-buildnumbers]
+    outputs:
+      lastest_build_number: ${{ steps.compare-build-number.outputs.lastest_build_number  }}
+    steps:
+      - id: compare-build-number
+        name: Compare the build number
+        run: |
+          echo "The latest build number from iOS is ${{ needs.fastlane-buildnumbers.outputs.BUILD_NUM_IOS }}"
+          echo "The latest build number from Andriod is ${{ needs.fastlane-buildnumbers.outputs.BUILD_NUM_ANDROID }}"
+          LATEST_BUILD_NUM=$(( ${{ needs.fastlane-buildnumbers.outputs.BUILD_NUM_IOS }} > ${{ needs.fastlane-buildnumbers.outputs.BUILD_NUM_ANDROID }} ? ${{ needs.fastlane-buildnumbers.outputs.BUILD_NUM_IOS }} : ${{ needs.fastlane-buildnumbers.outputs.BUILD_NUM_ANDROID }} ))
+          echo $LATEST_BUILD_NUM
+          echo "lastest_build_number=$LATEST_BUILD_NUM" >> "$GITHUB_OUTPUT"
