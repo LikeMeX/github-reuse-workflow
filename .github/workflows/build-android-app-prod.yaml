@@ -53,11 +53,16 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter packages pub run build_runner build --delete-conflicting-outputs
+      - name: Remove v in versioning name
+        id: remove-v-versioning
+        run: |
+          TAG=${{ inputs.LASTEST_VERSION_NAME }}
+          echo "VERSION_NAME=${TAG#v}" >> $GITHUB_OUTPUT
       - name: Build and Deploy to TestFlight
         env:
           FIREBASE_DISTRIBUTION_ANDROID_APP_ID: ${{ secrets.FIREBASE_DISTRIBUTION_ANDROID_APP_ID }}
           LASTEST_VERSION_BUILD: ${{ inputs.LASTEST_VERSION_BUILD }}
-          LASTEST_VERSION_NAME: ${{inputs.LASTEST_VERSION_NAME }}
+          LASTEST_VERSION_NAME: ${{steps.remove-v-versioning.outputs.VERSION_NAME}}
         run: |
           cd ./android
           fastlane add_plugin firebase_app_distribution
