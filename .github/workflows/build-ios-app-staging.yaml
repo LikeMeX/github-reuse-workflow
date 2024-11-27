@@ -77,4 +77,5 @@ jobs:
           export MATCH_PASSWORD="${{ secrets.MATCH_KEYCHAIN_PASSWORD }}" 
           export MATCH_GIT_BASIC_AUTHORIZATION="${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}" 
           pod install
+          fastlane add_plugin firebase_app_distribution
           bundle exec fastlane staging
