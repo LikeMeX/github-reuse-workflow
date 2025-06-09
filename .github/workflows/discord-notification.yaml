@@ -1,0 +1,48 @@
+name: Webhook on Event
+# Make sure to change what triggers your action based on your needs
+on:
+  workflow_call:
+    inputs:
+      message:
+        type: string
+      title:
+        type: string
+      thumbnail:
+        type: string
+      WEBHOOK_URL:
+        type: string
+        required: true
+
+
+jobs:
+  # ID of our job
+  webhook-request:
+    # OS to run our job on
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Input
+        run: echo ${{ inputs }}
+      - name: Send a request to webhook
+        run: |
+          RESPONSE=$(curl -H "Content-Type: application/json" -X POST -d '{
+          "username": "GitHub",
+          "content": "<@&1057626115079950389>",
+          "embeds": [
+            {
+              "type": "rich",
+              "title": "${{ inputs.title }}",
+              "description": "${{ inputs.message }}",
+              "color": 2123412,
+              "thumbnail": {
+                "url": "${{ inputs.thumbnail }}"
+              },
+              "author": {
+                "name": "${{ github.actor }}",
+                "url": "https://github.com/${{ github.actor_id }}",
+                "icon_url": "https://business.futureskill.co/fs-logo-light.png"
+              },
+              "url": "https://github.com/${{ github.repository }}"
+            }
+          ]
+          }' ${{ inputs.WEBHOOK_URL }})
+          echo "Webhook server response: $RESPONSE"
