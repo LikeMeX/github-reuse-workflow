@@ -37,12 +37,16 @@ jobs:
           fetch-depth: 0
 
       - name: Create Backup Archive
+        id: create_archive
         run: |
           # The archive name will be dynamic: repo-name-YYYYMMDD-commit.zip
           REPO_NAME=$(basename $GITHUB_REPOSITORY)
           TIMESTAMP=$(date +"%Y%m%d%H%M")
           COMMIT_HASH=$(git rev-parse --short HEAD)
-          zip -r "${REPO_NAME}-${TIMESTAMP}-${COMMIT_HASH}.zip" .
+          ARCHIVE_FILENAME="${REPO_NAME}-${TIMESTAMP}-${COMMIT_HASH}.zip"
+          zip -r "${ARCHIVE_FILENAME}" .
+          # Use an output parameter to pass the filename to the next steps
+          echo "archive_name=${ARCHIVE_FILENAME}" >> "$GITHUB_OUTPUT"
 
       - name: Auth GCP 
         id: auth
@@ -57,7 +61,7 @@ jobs:
         uses: 'google-github-actions/upload-cloud-storage@v2'
         with:
           # Get the archive file we just created
-          path: '*.zip'
+          path: '${{ steps.create_archive.outputs.archive_name }}'
           # Use inputs to build the destination path
           destination: '${{ inputs.gcs-bucket }}/${{ inputs.gcs-path }}'
           parent: false # Do not create a parent directory with the file name
