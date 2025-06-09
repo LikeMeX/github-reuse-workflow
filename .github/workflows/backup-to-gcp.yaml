@@ -1,0 +1,63 @@
+# .github/workflows/reusable-gcs-backup.yml
+# This is the REUSABLE workflow that lives in your central repository.
+
+name: Reusable - Backup to GCS
+
+# This 'workflow_call' trigger is what makes this workflow reusable.
+on:
+  workflow_call:
+    # Define the inputs the calling workflow must provide
+    inputs:
+      gcs-bucket:
+        description: 'The GCS bucket to upload the backup to.'
+        required: true
+        type: string
+      gcs-path:
+        description: 'The path/folder inside the bucket for this repo.'
+        required: true
+        type: string
+      workload_identity_provider:
+        required: true
+        type: string
+      service_account:
+        required: true
+        type: string
+      project_id:
+        type: string
+    # Define the secrets the calling workflow must pass
+
+jobs:
+  backup-to-gcs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          # We need to fetch all history and tags to get a complete backup
+          fetch-depth: 0
+
+      - name: Create Backup Archive
+        run: |
+          # The archive name will be dynamic: repo-name-YYYYMMDD-commit.zip
+          REPO_NAME=$(basename $GITHUB_REPOSITORY)
+          TIMESTAMP=$(date +"%Y%m%d%H%M")
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          zip -r "${REPO_NAME}-${TIMESTAMP}-${COMMIT_HASH}.zip" .
+
+      - name: Auth GCP 
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: 'access_token'
+          project_id: ${{ inputs.project_id }}
+          workload_identity_provider: ${{ inputs.workload_identity_provider }}
+          service_account: ${{ inputs.service_account }}
+
+      - name: Upload Backup to Google Cloud Storage
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          # Get the archive file we just created
+          path: '*.zip'
+          # Use inputs to build the destination path
+          destination: '${{ inputs.gcs-bucket }}/${{ inputs.gcs-path }}'
+          parent: false # Do not create a parent directory with the file name
