@@ -42,11 +42,13 @@ jobs:
           # The archive name will be dynamic: repo-name-YYYYMMDD-commit.zip
           REPO_NAME=$(basename $GITHUB_REPOSITORY)
           TIMESTAMP=$(date +"%Y%m%d%H%M")
+          DATE_PATH=$(date +"%Y-%m-%d")
           COMMIT_HASH=$(git rev-parse --short HEAD)
-          ARCHIVE_FILENAME="${REPO_NAME}-${TIMESTAMP}-${COMMIT_HASH}.zip"
+          ARCHIVE_FILENAME="${REPO_NAME}_${TIMESTAMP}_${COMMIT_HASH}.zip"
           zip -r "${ARCHIVE_FILENAME}" .
           # Use an output parameter to pass the filename to the next steps
           echo "archive_name=${ARCHIVE_FILENAME}" >> "$GITHUB_OUTPUT"
+          echo "date_path=${DATE_PATH}" >> "$GITHUB_OUTPUT"
 
       - name: Auth GCP 
         id: auth
@@ -63,5 +65,5 @@ jobs:
           # Get the archive file we just created
           path: '${{ steps.create_archive.outputs.archive_name }}'
           # Use inputs to build the destination path
-          destination: '${{ inputs.gcs-bucket }}/${{ inputs.gcs-path }}'
+          destination: '${{ inputs.gcs-bucket }}/${{ inputs.gcs-path }}/${{ steps.create_archive.outputs.date_path }}'
           parent: false # Do not create a parent directory with the file name
