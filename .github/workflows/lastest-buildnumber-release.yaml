@@ -74,7 +74,7 @@ jobs:
           DATA: ${{ secrets.FIREBASE_DISTRIBUTION_GOOGLE_SECREAT }}
       - name: Create file Android google services file for firebase distribution For FCM
         run: |
-          echo $DATA > ./key-dist/google_services.json | base64
+          echo $DATA > ./key-dist/google-services.json | base64
         env:
           DATA: ${{ inputs.environment == 'prod' && secrets.GOOGLE_SERVICES_ANDROID_PROD || secrets.GOOGLE_SERVICES_ANDROID_STAGING }}
       - name: Create file IOS google services file for firebase distribution For FCM
