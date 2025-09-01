@@ -38,7 +38,7 @@ jobs:
           ruby-version: "3.3.5"
       - name: move google services file
         run: |
-          mv .google-services.json ./android/app/google-services.json
+          mv google-services.json ./android/app/google-services.json
       - name: move required files
         run: |
           mv env ./lib/.env

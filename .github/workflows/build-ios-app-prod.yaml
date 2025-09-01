@@ -53,7 +53,7 @@ jobs:
           ruby-version: "3.3.5"
       - name: move google services file
         run: |
-          mv .GoogleService-Info.plist ./ios/Runner/GoogleService-Info.plist
+          mv GoogleService-Info.plist ./ios/Runner/GoogleService-Info.plist
       - name: move .env file
         run: |
           mv env ./lib/.env
