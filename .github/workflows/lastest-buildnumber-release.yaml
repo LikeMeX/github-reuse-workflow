@@ -1,6 +1,12 @@
 name: Get lastest build number from platform
 on:
   workflow_call:
+    inputs:
+      environment:
+        description: "Environment (staging or prod)"
+        required: true
+        type: string
+        default: "staging"
     secrets:
       GH_PAT:
         description: "GitHub Personal Access Token"
@@ -61,11 +67,21 @@ jobs:
       - name: Create key-dist directory
         run: |
           mkdir key-dist
-      - name: Create file google services for access firebase distribution
+      - name: Create file google services for access firebase distribution For Deploy
         run: |
           echo $DATA > ./key-dist/GOOGLE_SERVICES_JSON.json | base64
         env:
           DATA: ${{ secrets.FIREBASE_DISTRIBUTION_GOOGLE_SECREAT }}
+      - name: Create file Android google services file for firebase distribution For FCM
+        run: |
+          echo $DATA > ./key-dist/google_services.json | base64
+        env:
+          DATA: ${{ inputs.environment == 'prod' && secrets.GOOGLE_SERVICES_ANDROID_PROD || secrets.GOOGLE_SERVICES_ANDROID_STAGING }}
+      - name: Create file IOS google services file for firebase distribution For FCM
+        run: |
+          echo $DATA > ./key-dist/GoogleService-Info.plist | base64
+        env:
+          DATA: ${{ inputs.environment == 'prod' && secrets.GOOGLE_SERVICES_IOS_PROD || secrets.GOOGLE_SERVICES_IOS_STAGING }}
       - name: Create google service json for access play store file
         run: |
           echo $GHA_PUBLISH_JSON_STAGING >> ./key-dist/GHA_PUBLISH_JSON.json | base64
