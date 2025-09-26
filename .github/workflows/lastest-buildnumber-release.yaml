@@ -100,7 +100,7 @@ jobs:
       - name: Prepare Key.properties
         run: |
           cd ./key-dist
-          echo "storeFile=${GITHUB_WORKSPACE}/keystore.jks" &>> key.properties
+          echo "storeFile=${GITHUB_WORKSPACE}/key-dist/keystore.jks" &>> key.properties
           echo "keyPassword=${{secrets.KEYSTORE_PASSWORD}}" &>> key.properties
           echo "keyAlias=${{secrets.KEYSTORE_KEY_ALIAS}}" &>> key.properties
           echo "storePassword=${{secrets.KEYSTORE_KEY_PASSWORD}}" &>> key.properties
