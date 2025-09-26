@@ -32,17 +32,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: key-dist
+          path: ./key-dist
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3.5"
       - name: move google services file
         run: |
-          mv google-services.json ./android/app/google-services.json
+          mv ./key-dist/google-services.json ./android/app/google-services.json
       - name: move required files
         run: |
-          mv env ./lib/.env
-          mv key.properties ./android/key.properties
+          mv ./key-dist/env ./lib/.env
+          mv ./key-dist/key.properties ./android/key.properties
       - name: Bundle install for iOS Gemfile
         timeout-minutes: 5
         run: |
