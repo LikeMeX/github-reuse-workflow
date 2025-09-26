@@ -111,7 +111,7 @@ jobs:
       - name: Upload to artifact
         uses: actions/upload-artifact@v4
         with:
-          name: key-dist-${{ github.sha }}
+          name: key-dist
           path: ./key-dist
           retention-days: 1
           if-no-files-found: error
@@ -131,7 +131,8 @@ jobs:
       - name: Download a required file artifact
         uses: actions/download-artifact@v4
         with:
-          name: key-dist-${{ github.sha }}
+          name: key-dist
+          path: ./
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
