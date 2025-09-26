@@ -53,6 +53,12 @@ on:
       ENV:
         description: "ENV file"
         required: true
+      GOOGLE_SERVICES_ANDROID:
+        description: "FCM for Android"
+        required: true
+      GOOGLE_SERVICES_IOS:
+        description: "FCM for ios"
+        required: true
     outputs:
       lastest_build_number:
         description: "Lastest build number from platform"
@@ -74,14 +80,14 @@ jobs:
           DATA: ${{ secrets.FIREBASE_DISTRIBUTION_GOOGLE_SECREAT }}
       - name: Create file Android google services file for firebase distribution For FCM
         run: |
-          echo $DATA > ./key-dist/google-services.json | base64
+          echo $GOOGLE_SERVICES_ANDROID > ./key-dist/google-services.json | base64
         env:
-          DATA: ${{ inputs.environment == 'prod' && secrets.GOOGLE_SERVICES_ANDROID_PROD || secrets.GOOGLE_SERVICES_ANDROID_STAGING }}
+          GOOGLE_SERVICES_ANDROID: ${{ secrets.GOOGLE_SERVICES_ANDROID }}
       - name: Create file IOS google services file for firebase distribution For FCM
         run: |
-          echo $DATA > ./key-dist/GoogleService-Info.plist | base64
+          echo $GOOGLE_SERVICES_IOS > ./key-dist/GoogleService-Info.plist | base64
         env:
-          DATA: ${{ inputs.environment == 'prod' && secrets.GOOGLE_SERVICES_IOS_PROD || secrets.GOOGLE_SERVICES_IOS_STAGING }}
+          GOOGLE_SERVICES_IOS: ${{ secrets.GOOGLE_SERVICES_IOS }}
       - name: Create google service json for access play store file
         run: |
           echo $GHA_PUBLISH_JSON_STAGING >> ./key-dist/GHA_PUBLISH_JSON.json | base64
