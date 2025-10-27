@@ -1,0 +1,15 @@
+name: Code Scanning
+
+on:
+  workflow_call:
+    
+jobs:
+  rule_check:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Report
+        id: report
+        uses: bearer/bearer-action@v2
