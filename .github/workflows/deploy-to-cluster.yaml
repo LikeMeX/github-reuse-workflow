@@ -1,0 +1,81 @@
+name: Deploy to cluster
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      docker-image: 
+        required: true
+        type: string
+      docker-tag: 
+        required: true
+        type: string
+      workload_identity_provider:
+        required: true
+        type: string
+      service_account:
+        required: true
+        type: string
+      GKE_CLUSTER: 
+        required: true
+        type: string
+      GKE_ZONE:
+        required: true
+        type: string
+      RELEASE_NAME:
+        required: true
+        type: string
+      map_env_to_config:
+        type: boolean
+        default: true
+    secrets:
+      GH_PAT:
+        required: true
+
+jobs:
+  deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Copy values file
+        run: |-
+          sed "s=<DOCKER_TAG>=${{ inputs.docker-tag }}=g" < ./deploy/values-${{ inputs.environment }}.yaml > ./deploy/values.yaml
+
+      - name: Auth GCP 
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ inputs.workload_identity_provider }}
+          service_account: ${{ inputs.service_account }}
+
+      - name: Auth GKE Cluster
+        id: get-credentials
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: ${{ inputs.GKE_CLUSTER }}
+          location: ${{ inputs.GKE_ZONE }}
+
+      - name: Diff ConfigMap
+        if: ${{ inputs.map_env_to_config }}
+        run: |-
+          kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl diff -f -
+
+      - name: Apply ConfigMap
+        if: ${{ inputs.map_env_to_config }}
+        run: |-
+          kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy
+        run: |-
+          helm upgrade --install --atomic --timeout 600s ${{ inputs.RELEASE_NAME }} -f deploy/values.yaml fs-app-chart/ --namespace ${{ inputs.environment }} --create-namespace
+

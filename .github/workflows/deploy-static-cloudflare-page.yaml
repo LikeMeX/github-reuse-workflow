@@ -1,0 +1,36 @@
+name: Deploy static to Cloudflare Page
+
+on:
+  workflow_call:
+    inputs:
+      cloudflare-account-id:
+        required: true
+        type: string
+      cloudflare-page-project-name:
+        required: true
+        type: string
+      branch:
+        required: true
+        type: string
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        required: true
+
+jobs:
+  deploy-static-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: out
+
+      - name: Publish
+        uses: cloudflare/wrangler-action@2.0.0
+        env:
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ inputs.cloudflare-account-id }}
+          command: pages publish --project-name=${{ inputs.cloudflare-page-project-name }} --branch ${{ inputs.branch }} ./
+

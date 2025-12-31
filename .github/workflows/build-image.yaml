@@ -1,0 +1,89 @@
+name: Build image
+
+on:
+  workflow_call:
+    # secrets:
+    #   workload_identity_provider:
+    #     required: true
+    inputs:
+      environment:
+        required: true
+        type: string
+      docker-registry:
+        default: asia.gcr.io
+        type: string
+      docker-image: 
+        required: true
+        type: string
+      docker-tag: 
+        required: true
+        type: string
+      setup-platforms:
+        default: amd64
+        type: string
+      build-platforms: 
+        type: string
+        default: linux/amd64
+      workload_identity_provider:
+        required: true
+        type: string
+      service_account:
+        required: true
+        type: string
+      project_id:
+        type: string
+
+jobs:
+  build-image:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      packages: 'write'
+
+    runs-on: ubuntu-latest
+    # outputs:
+    #   tags: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Auth GCP 
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: 'access_token'
+          project_id: ${{ inputs.project_id }}
+          workload_identity_provider: ${{ inputs.workload_identity_provider }}
+          service_account: ${{ inputs.service_account }}
+
+      # -
+      #   name: Set up QEMU
+      #   uses: docker/setup-qemu-action@v2
+      #   with:
+      #     platforms: ${{ inputs.setup-platforms }}
+      
+          # Set up buildx     
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2      
+
+      # This example uses the docker login action
+      - name: Auth GCR 
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ inputs.docker-registry }}
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'  
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: ${{ inputs.build-platforms }}
+          push: true
+          tags: ${{ inputs.docker-image }}:${{ inputs.docker-tag }}
+          build-args: |
+            ENVFILE=env/.env.${{ inputs.environment }}
+            ENV=${{ inputs.environment }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
