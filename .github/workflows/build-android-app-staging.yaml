@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@v1.3.1
+        uses: endersonmenezes/free-disk-space@v3
         with:
           tool-cache: false
           android: false
@@ -28,6 +28,7 @@ jobs:
           large-packages: false
           docker-images: true
           swap-storage: false
+          rm_cmd: "rmz"
       - name: Set up git and fetch all history for all branches and tags
         uses: actions/checkout@v4
         with:
