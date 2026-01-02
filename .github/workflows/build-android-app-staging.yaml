@@ -18,11 +18,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
       - name: Set up git and fetch all history for all branches and tags
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up JDK 17
+      - name: Set up JDK 18
         uses: actions/setup-java@v4
         with:
           java-version: "18"
@@ -47,8 +48,8 @@ jobs:
       - name: Bundle install for iOS Gemfile
         timeout-minutes: 5
         run: |
-          cd ./android && bundle install
           gem update --system
+          cd ./android && bundle install
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
@@ -64,5 +65,17 @@ jobs:
           LASTEST_VERSION_NAME: ${{inputs.LASTEST_VERSION_NAME }}
         run: |
           cd ./android
-          fastlane add_plugin firebase_app_distribution
           bundle exec fastlane staging
+      - name: Free Disk Space (Cleanup)
+        uses: endersonmenezes/free-disk-space@v3
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+          remove_folders: "./build ./android/app/build"
+          rm_cmd: "rmz"
+          rmz_version: "3.1.1"
