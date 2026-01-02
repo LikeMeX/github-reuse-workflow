@@ -18,6 +18,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: false
       - name: Set up git and fetch all history for all branches and tags
         uses: actions/checkout@v4
         with:
@@ -64,5 +74,4 @@ jobs:
           LASTEST_VERSION_NAME: ${{inputs.LASTEST_VERSION_NAME }}
         run: |
           cd ./android
-          fastlane add_plugin firebase_app_distribution
           bundle exec fastlane staging
