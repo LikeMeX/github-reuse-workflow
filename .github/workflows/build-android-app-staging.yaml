@@ -68,7 +68,6 @@ jobs:
           cd ./android
           bundle exec fastlane staging
       - name: Free Disk Space (Cleanup)
-        if: always()
         uses: endersonmenezes/free-disk-space@v3
         with:
           tool-cache: true
