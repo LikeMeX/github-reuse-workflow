@@ -18,18 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: endersonmenezes/free-disk-space@v3
-        with:
-          tool-cache: false
-          android: false
-          dotnet: true
-          haskell: true
-          large-packages: false
-          docker-images: true
-          swap-storage: false
-          rm_cmd: "rmz"
-          rmz_version: "3.1.1"
+
       - name: Set up git and fetch all history for all branches and tags
         uses: actions/checkout@v4
         with:
@@ -78,3 +67,17 @@ jobs:
         run: |
           cd ./android
           bundle exec fastlane staging
+      - name: Free Disk Space (Cleanup)
+        if: always()
+        uses: endersonmenezes/free-disk-space@v3
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+          remove_folders: "./build ./android/app/build"
+          rm_cmd: "rmz"
+          rmz_version: "3.1.1"
