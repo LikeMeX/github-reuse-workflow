@@ -76,6 +76,6 @@ jobs:
           large-packages: true
           docker-images: true
           swap-storage: true
-          remove_folders: "./build ./android/app/build"
+          remove_folders: "./build ./android/app/build /home/runner/.pub-cache /opt/hostedtoolcache"
           rm_cmd: "rmz"
           rmz_version: "3.1.1"
