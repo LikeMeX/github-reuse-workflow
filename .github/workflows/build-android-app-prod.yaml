@@ -47,8 +47,8 @@ jobs:
       - name: Bundle install for iOS Gemfile
         timeout-minutes: 5
         run: |
-          cd ./android && bundle install
           gem update --system
+          cd ./android && bundle install
       - name: Set up Flutter SDK
         uses: subosito/flutter-action@v2
         with:
@@ -71,3 +71,15 @@ jobs:
           cd ./android
           fastlane add_plugin firebase_app_distribution
           bundle exec fastlane prod
+      - name: Free Disk Space (Cleanup)
+        uses: endersonmenezes/free-disk-space@v3
+        with:
+          remove_tool_cache: true
+          remove_android: true
+          remove_dotnet: true
+          remove_haskell: true
+          remove_packages: true
+          remove_swap: true
+          remove_folders: "./build ./android/app/build /home/runner/.pub-cache /opt/hostedtoolcache"
+          rm_cmd: "rmz"
+          rmz_version: "3.1.1"
