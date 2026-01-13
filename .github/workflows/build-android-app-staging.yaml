@@ -25,11 +25,7 @@ jobs:
       - name: Free Disk Space (Cleanup)
         uses: endersonmenezes/free-disk-space@v3
         with:
-          remove_tool_cache: true
-          remove_dotnet: true
-          remove_haskell: true
-          remove_swap: true
-          remove_android: true
+          remove_folders: "./build ./android/app/build /home/runner/.pub-cache /opt/hostedtoolcache"
           rm_cmd: "rmz"
           rmz_version: "3.1.1"
       - name: Check free space after cleanup (debug)
