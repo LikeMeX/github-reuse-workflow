@@ -22,6 +22,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Free Disk Space (Cleanup)
+        uses: endersonmenezes/free-disk-space@v3
+        with:
+          remove_tool_cache: true
+          remove_dotnet: true
+          remove_haskell: true
+          remove_swap: true
+          remove_android: true
+          rm_cmd: "rmz"
+          rmz_version: "3.1.1"
+      - name: Check free space after cleanup (debug)
+        run: df -h
       - name: Set up JDK 18
         uses: actions/setup-java@v4
         with:
@@ -65,13 +77,3 @@ jobs:
         run: |
           cd ./android
           bundle exec fastlane staging
-      - name: Free Disk Space (Cleanup)
-        uses: endersonmenezes/free-disk-space@v3
-        with:
-          remove_tool_cache: true
-          remove_dotnet: true
-          remove_haskell: true
-          remove_swap: true
-          remove_android: false
-          rm_cmd: "rmz"
-          rmz_version: "3.1.1"
