@@ -40,7 +40,6 @@ jobs:
           java-version: "18"
           distribution: "corretto"
           # cache: gradle
-          cache: false
       - name: Download a required file artifact
         uses: actions/download-artifact@v4
         with:
