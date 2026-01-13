@@ -22,6 +22,38 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Aggressive early cleanup before any cache restore
+        run: |
+          echo "==== BEFORE ===="
+          df -h
+
+          echo "==== Remove GitHub runner bloat (safe for Android) ===="
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/swift
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /var/lib/docker
+          sudo rm -rf /opt/hostedtoolcache
+
+          #Android Emulator images only (SDK tools + platform-tools are kept)
+          sudo rm -rf /usr/local/lib/android/sdk/system-images
+
+          echo "==== Remove project & build caches ===="
+          sudo rm -rf \
+            ~/.gradle/caches \
+            ~/.gradle/wrapper \
+            ~/.pub-cache \
+            ~/.android \
+            ./android/.gradle \
+            ./build \
+            ./android/app/build \
+            ./android/build
+
+          echo "==== APT cache ===="
+          sudo apt-get clean
+
+          echo "==== AFTER ===="
+          df -h
       - name: Set up JDK 18
         uses: actions/setup-java@v4
         with:
@@ -78,5 +110,5 @@ jobs:
           remove_folders: "./build ./android/app/build /home/runner/.pub-cache /opt/hostedtoolcache"
           rm_cmd: "rmz"
           rmz_version: "3.1.1"
-      - name: Check free space after cleanup (debug)
+      - name: Check free space after cleanup
         run: df -h
