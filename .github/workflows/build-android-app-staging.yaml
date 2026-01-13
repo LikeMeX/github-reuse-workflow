@@ -22,6 +22,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Aggressive early cleanup before any cache restore
+        run: |
+          sudo rm -rf \
+            ~/android-ndk* \
+            ~/.gradle/caches/ \
+            ~/.pub-cache \
+            ./android/.gradle \
+            ./build \
+            ./android/app/build \
+            ./android/build
+
+          df -h
       - name: Set up JDK 18
         uses: actions/setup-java@v4
         with:
