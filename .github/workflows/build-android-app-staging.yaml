@@ -53,13 +53,6 @@ jobs:
         run: |
           mv ./key-dist/env ./lib/.env
           mv ./key-dist/key.properties ./android/key.properties
-      # /////
-      - name: Cleanup Gradle & Pub cache
-        run: |
-          rm -rf ~/.gradle/caches
-          rm -rf ~/.gradle/wrapper
-          rm -rf ~/.pub-cache
-      # /////
       - name: Bundle install for iOS Gemfile
         timeout-minutes: 5
         run: |
@@ -76,6 +69,7 @@ jobs:
       - name: Build and Deploy to TestFlight
         env:
           FIREBASE_DISTRIBUTION_ANDROID_APP_ID: ${{ secrets.FIREBASE_DISTRIBUTION_ANDROID_APP_ID }}
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.vfs.watch=false"
           LASTEST_VERSION_BUILD: ${{ inputs.LASTEST_VERSION_BUILD }}
           LASTEST_VERSION_NAME: ${{inputs.LASTEST_VERSION_NAME }}
         run: |
