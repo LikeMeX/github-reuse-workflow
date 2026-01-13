@@ -69,7 +69,6 @@ jobs:
       - name: Build and Deploy to TestFlight
         env:
           FIREBASE_DISTRIBUTION_ANDROID_APP_ID: ${{ secrets.FIREBASE_DISTRIBUTION_ANDROID_APP_ID }}
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.vfs.watch=false"
           LASTEST_VERSION_BUILD: ${{ inputs.LASTEST_VERSION_BUILD }}
           LASTEST_VERSION_NAME: ${{inputs.LASTEST_VERSION_NAME }}
         run: |
