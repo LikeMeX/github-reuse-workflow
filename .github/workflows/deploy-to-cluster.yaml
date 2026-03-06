@@ -6,10 +6,10 @@ on:
       environment:
         required: true
         type: string
-      docker-image: 
+      docker-image:
         required: true
         type: string
-      docker-tag: 
+      docker-tag:
         required: true
         type: string
       workload_identity_provider:
@@ -18,7 +18,7 @@ on:
       service_account:
         required: true
         type: string
-      GKE_CLUSTER: 
+      GKE_CLUSTER:
         required: true
         type: string
       GKE_ZONE:
@@ -37,8 +37,8 @@ on:
 jobs:
   deploy:
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -51,7 +51,7 @@ jobs:
         run: |-
           sed "s=<DOCKER_TAG>=${{ inputs.docker-tag }}=g" < ./deploy/values-${{ inputs.environment }}.yaml > ./deploy/values.yaml
 
-      - name: Auth GCP 
+      - name: Auth GCP
         id: auth
         uses: google-github-actions/auth@v1
         with:
@@ -60,7 +60,7 @@ jobs:
 
       - name: Auth GKE Cluster
         id: get-credentials
-        uses: 'google-github-actions/get-gke-credentials@v2'
+        uses: "google-github-actions/get-gke-credentials@v2"
         with:
           cluster_name: ${{ inputs.GKE_CLUSTER }}
           location: ${{ inputs.GKE_ZONE }}
@@ -68,7 +68,11 @@ jobs:
       - name: Diff ConfigMap
         if: ${{ inputs.map_env_to_config }}
         run: |-
-          kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl diff -f -
+          if kubectl get configmap ${{ inputs.RELEASE_NAME }}-my-app --namespace ${{ inputs.environment }} > /dev/null 2>&1; then
+            kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl diff -f - || true
+          else
+            echo "ConfigMap does not exist, skipping diff"
+          fi
 
       - name: Apply ConfigMap
         if: ${{ inputs.map_env_to_config }}
@@ -78,4 +82,3 @@ jobs:
       - name: Deploy
         run: |-
           helm upgrade --install --atomic --timeout 600s ${{ inputs.RELEASE_NAME }} -f deploy/values.yaml fs-app-chart/ --namespace ${{ inputs.environment }} --create-namespace
-
