@@ -53,7 +53,7 @@ jobs:
 
       - name: Auth GCP
         id: auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ inputs.workload_identity_provider }}
           service_account: ${{ inputs.service_account }}
@@ -65,19 +65,18 @@ jobs:
           cluster_name: ${{ inputs.GKE_CLUSTER }}
           location: ${{ inputs.GKE_ZONE }}
 
-      - name: Diff ConfigMap
-        if: ${{ inputs.map_env_to_config }}
-        run: |-
-          if kubectl get configmap ${{ inputs.RELEASE_NAME }}-my-app --namespace ${{ inputs.environment }} > /dev/null 2>&1; then
-            kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl diff -f - || true
-          else
-            echo "ConfigMap does not exist, skipping diff"
-          fi
-
       - name: Apply ConfigMap
         if: ${{ inputs.map_env_to_config }}
-        run: |-
-          kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+        run: |
+          if [ -f "env/.env.${{ inputs.environment }}" ]; then
+            kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+          fi
+      - name: Apply Secret
+        if: ${{ inputs.map_env_to_config }}
+        run: |
+          if [ -f "secrets/.env.enc.${{ inputs.environment }}" ]; then
+            kubectl create secret generic ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=secrets/.env.enc.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+          fi
 
       - name: Deploy
         run: |-
