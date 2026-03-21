@@ -64,20 +64,27 @@ jobs:
         with:
           cluster_name: ${{ inputs.GKE_CLUSTER }}
           location: ${{ inputs.GKE_ZONE }}
-
       - name: Apply ConfigMap
         if: ${{ inputs.map_env_to_config }}
         run: |
           if [ -f "env/.env.${{ inputs.environment }}" ]; then
             kubectl create configmap ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=env/.env.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
           fi
-      - name: Apply Secret
+      - name: Decrypt secrets with SOPS
         if: ${{ inputs.map_env_to_config }}
         run: |
           if [ -f "secrets/.env.enc.${{ inputs.environment }}" ]; then
-            kubectl create secret generic ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=secrets/.env.enc.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+            curl -fsSL "https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64" -o /tmp/sops
+            chmod +x /tmp/sops
+            sudo mv /tmp/sops /usr/local/bin/sops
+            sops -d "secrets/.env.enc.${{ inputs.environment }}" > "secrets/.env.dec.${{ inputs.environment }}"
           fi
-
+      - name: Apply Secret
+        if: ${{ inputs.map_env_to_config }}
+        run: |
+          if [ -f "secrets/.env.dec.${{ inputs.environment }}" ]; then
+            kubectl create secret generic ${{ inputs.RELEASE_NAME }}-my-app --from-env-file=secrets/.env.dec.${{ inputs.environment }} --namespace ${{ inputs.environment }} --dry-run=client -o yaml | kubectl apply -f -
+          fi
       - name: Deploy
         run: |-
           helm upgrade --install --atomic --timeout 600s ${{ inputs.RELEASE_NAME }} -f deploy/values.yaml fs-app-chart/ --namespace ${{ inputs.environment }} --create-namespace
