@@ -44,7 +44,7 @@ jobs:
           path: ./key-dist
       - name: Select Xcode Version
         run: |
-          sudo xcode-select -s /Applications/Xcode_16.4.app 2>/dev/null \
+          sudo xcode-select -s /Applications/Xcode_26.4.app 2>/dev/null \
           || sudo xcode-select -s "$(ls -d /Applications/Xcode_* | sort -V | tail -n 1)" \
           || sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
