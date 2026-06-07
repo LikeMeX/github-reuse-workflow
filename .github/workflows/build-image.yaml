@@ -85,5 +85,6 @@ jobs:
           build-args: |
             ENVFILE=env/.env.${{ inputs.environment }}
             ENV=${{ inputs.environment }}
+            CI_SHA=${{ inputs.docker-tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
