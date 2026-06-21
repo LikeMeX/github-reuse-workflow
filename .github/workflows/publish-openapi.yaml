@@ -32,11 +32,11 @@ on:
       node-version:
         required: false
         type: string
-        default: '18'
+        default: '24'
       pnpm-version:
         required: false
         type: string
-        default: '8'
+        default: '10'
       workload_identity_provider:
         required: true
         type: string
@@ -58,13 +58,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           version: ${{ inputs.pnpm-version }}
           run_install: false
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
           cache: pnpm
