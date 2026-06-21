@@ -32,11 +32,11 @@ on:
       node-version:
         required: false
         type: string
-        default: '18'
+        default: '24'
       pnpm-version:
         required: false
         type: string
-        default: '8'
+        default: '10'
       workload_identity_provider:
         required: true
         type: string
@@ -58,13 +58,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           version: ${{ inputs.pnpm-version }}
           run_install: false
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
           cache: pnpm
@@ -74,10 +74,14 @@ jobs:
 
       - name: Set env
         run: |
-          ENV_FILE="env/.env.${{ inputs.environment }}"
-          if [ -f "$ENV_FILE" ]; then
-            cp "$ENV_FILE" .env
-          fi
+          for ENV_FILE in "env/.env.${{ inputs.environment }}" ".env.${{ inputs.environment }}"; do
+            if [ -f "$ENV_FILE" ]; then
+              cp "$ENV_FILE" .env
+              echo "Using $ENV_FILE"
+              exit 0
+            fi
+          done
+          echo "No env file found for environment: ${{ inputs.environment }}"
 
       - name: Build
         if: inputs.build-command != ''
