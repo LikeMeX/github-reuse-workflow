@@ -10,8 +10,14 @@ on:
       thumbnail:
         type: string
       WEBHOOK_URL:
+        description: "Deprecated. Pass the URL as the WEBHOOK_URL secret instead so it is masked in logs and can be stored outside the workflow file."
         type: string
-        required: true
+        required: false
+        default: ""
+    secrets:
+      WEBHOOK_URL:
+        description: "Discord webhook URL. Takes precedence over the input of the same name."
+        required: false
 
 
 jobs:
@@ -20,29 +26,53 @@ jobs:
     # OS to run our job on
     runs-on: ubuntu-latest
     steps:
-      - name: Get Input
-        run: echo ${{ inputs }}
       - name: Send a request to webhook
+        env:
+          # The secret wins when both are supplied. Callers still passing the input keep
+          # working unchanged.
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL || inputs.WEBHOOK_URL }}
+          # Passed through the environment rather than interpolated into the payload:
+          # these carry branch names and commit subjects, and a quote in one of them would
+          # otherwise break the JSON or escape into the shell.
+          TITLE: ${{ inputs.title }}
+          MESSAGE: ${{ inputs.message }}
+          THUMBNAIL: ${{ inputs.thumbnail }}
+          ACTOR: ${{ github.actor }}
+          ACTOR_ID: ${{ github.actor_id }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          RESPONSE=$(curl -H "Content-Type: application/json" -X POST -d '{
-          "username": "GitHub",
-          "content": "<@&1057626115079950389>",
-          "embeds": [
-            {
-              "type": "rich",
-              "title": "${{ inputs.title }}",
-              "description": "${{ inputs.message }}",
-              "color": 2123412,
-              "thumbnail": {
-                "url": "${{ inputs.thumbnail }}"
-              },
-              "author": {
-                "name": "${{ github.actor }}",
-                "url": "https://github.com/${{ github.actor_id }}",
-                "icon_url": "https://business.futureskill.co/fs-logo-light.png"
-              },
-              "url": "https://github.com/${{ github.repository }}"
-            }
-          ]
-          }' ${{ inputs.WEBHOOK_URL }})
+          set -euo pipefail
+
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "::error::No webhook URL. Pass the WEBHOOK_URL secret."
+            exit 1
+          fi
+
+          # jq builds the payload so every value is correctly JSON-escaped.
+          PAYLOAD=$(jq -n \
+            --arg title "$TITLE" \
+            --arg message "$MESSAGE" \
+            --arg thumbnail "$THUMBNAIL" \
+            --arg actor "$ACTOR" \
+            --arg actor_id "$ACTOR_ID" \
+            --arg repository "$REPOSITORY" \
+            '{
+              username: "GitHub",
+              content: "<@&1057626115079950389>",
+              embeds: [{
+                type: "rich",
+                title: $title,
+                description: $message,
+                color: 2123412,
+                thumbnail: { url: $thumbnail },
+                author: {
+                  name: $actor,
+                  url: "https://github.com/\($actor_id)",
+                  icon_url: "https://business.futureskill.co/fs-logo-light.png"
+                },
+                url: "https://github.com/\($repository)"
+              }]
+            }')
+
+          RESPONSE=$(curl -sS -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$WEBHOOK_URL")
           echo "Webhook server response: $RESPONSE"
