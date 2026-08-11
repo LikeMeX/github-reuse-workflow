@@ -46,7 +46,10 @@ jobs:
       - name: Latest tag
         id: latest-tag
         run: |
-          LATEST_TAG_V=$(git describe --tags --abbrev=0)
+          # Exclude the build/<n> counter tags used by next-build-number.yaml, otherwise
+          # `build/1234` would be picked up here and the leading-character strip below
+          # would turn it into `uild/1234`.
+          LATEST_TAG_V=$(git describe --tags --abbrev=0 --exclude='build/*')
           LATEST_TAG=${LATEST_TAG_V:1}
           echo $LATEST_TAG
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT

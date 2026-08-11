@@ -1,0 +1,101 @@
+name: Next build number
+
+# Allocates a monotonically increasing build number for the CALLING repository.
+#
+# The counter lives in the caller's own tag namespace as `build/<n>`. Allocation is
+# race-free without serialising the surrounding build: pushing a tag is atomic, so two
+# concurrent runs that pick the same `n` will see exactly one push succeed and the loser
+# simply retries with `n + 1`.
+#
+# This replaces querying App Store Connect / Google Play / Firebase for the latest build
+# number on lanes that only ever publish to Firebase App Distribution (feature QA, UAT).
+# Production lanes should still take `max(this counter, store maximum) + 1` so that a
+# damaged tag namespace can never push a duplicate version code to a store.
+
+on:
+  workflow_call:
+    inputs:
+      FLOOR:
+        description: "Optional lower bound. The allocated number is always greater than this."
+        required: false
+        type: string
+        default: "0"
+      DRY_RUN:
+        description: "Compute the next number without creating or pushing the tag."
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      GH_PAT:
+        description: "Token with permission to push tags. Falls back to the job token."
+        required: false
+    outputs:
+      build_number:
+        description: "The allocated build number"
+        value: ${{ jobs.allocate.outputs.build_number }}
+
+jobs:
+  allocate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      build_number: ${{ steps.allocate.outputs.build_number }}
+    steps:
+      - name: Checkout with full tag history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      - name: Allocate build number
+        id: allocate
+        env:
+          FLOOR: ${{ inputs.FLOOR }}
+          DRY_RUN: ${{ inputs.DRY_RUN }}
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          # Highest existing counter tag. `sort -n` on the bare number avoids the
+          # lexicographic ordering that would put build/9 above build/10.
+          CURRENT=$(git tag -l 'build/*' | sed 's|^build/||' | grep -E '^[0-9]+$' | sort -n | tail -1)
+          CURRENT=${CURRENT:-0}
+
+          FLOOR=${FLOOR:-0}
+          if [ "$FLOOR" -gt "$CURRENT" ]; then
+            echo "Floor $FLOOR is above the current counter $CURRENT; starting from the floor."
+            CURRENT=$FLOOR
+          fi
+          echo "Counter starts at $CURRENT"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            NEXT=$((CURRENT + 1))
+            echo "Dry run: would allocate $NEXT"
+            echo "build_number=$NEXT" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          N=$CURRENT
+          for _ in $(seq 1 10); do
+            N=$((N + 1))
+            git tag "build/$N"
+            if git push origin "build/$N" 2>&1; then
+              echo "Allocated build number $N"
+              echo "build_number=$N" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            # Another run won the race for this number. Drop the local tag and try the next.
+            echo "build/$N was taken by a concurrent run; retrying."
+            git tag -d "build/$N"
+          done
+
+          echo "::error::Could not allocate a build number after 10 attempts."
+          exit 1
+
+      - name: Summary
+        run: echo "Allocated build number **${{ steps.allocate.outputs.build_number }}**" >> "$GITHUB_STEP_SUMMARY"
