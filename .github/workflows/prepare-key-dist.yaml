@@ -1,0 +1,100 @@
+name: Prepare key-dist artifact
+
+# Builds the `key-dist` artifact consumed by build-{ios,android}-app-{staging,prod}.
+#
+# This is the `create-required-file` job of lastest-buildnumber-release.yaml extracted so
+# that lanes which do not need a platform build-number query can produce the artifact on
+# its own. lastest-buildnumber-release.yaml still carries its own copy: other repositories
+# call it and must keep working unchanged.
+#
+# The steps below are deliberately byte-for-byte identical to that job. The quoting is odd
+# in places (`echo $DATA > file | base64`), but production depends on the exact output, so
+# it is preserved rather than cleaned up.
+#
+# Reusable workflows execute inside the caller's workflow run, so the artifact uploaded
+# here is downloadable by any other job in that same run. It is NOT visible across runs —
+# never chain this to a build via `workflow_run`.
+
+on:
+  workflow_call:
+    secrets:
+      FIREBASE_DISTRIBUTION_GOOGLE_SECREAT:
+        description: "Service account JSON for Firebase App Distribution"
+        required: true
+      GOOGLE_SERVICES_ANDROID:
+        description: "FCM for Android (google-services.json)"
+        required: true
+      GOOGLE_SERVICES_IOS:
+        description: "FCM for iOS (GoogleService-Info.plist)"
+        required: true
+      ENV:
+        description: "ENV file contents"
+        required: true
+      KEYSTORE:
+        description: "base64 encoded keystore jks file"
+        required: true
+      KEYSTORE_PASSWORD:
+        description: "keystore password"
+        required: true
+      KEYSTORE_KEY_ALIAS:
+        description: "keystore key alias"
+        required: true
+      KEYSTORE_KEY_PASSWORD:
+        description: "keystore key password"
+        required: true
+      GHA_PUBLISH_JSON:
+        description: "Google Play publisher service account JSON. Only needed by prod lanes."
+        required: false
+
+jobs:
+  create-required-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Current directory
+        run: |
+          pwd
+      - name: Create key-dist directory
+        run: |
+          mkdir key-dist
+      - name: Create file google services for access firebase distribution For Deploy
+        run: |
+          echo $DATA > ./key-dist/GOOGLE_SERVICES_JSON.json | base64
+        env:
+          DATA: ${{ secrets.FIREBASE_DISTRIBUTION_GOOGLE_SECREAT }}
+      - name: Create file Android google services file for firebase distribution For FCM
+        run: |
+          echo $GOOGLE_SERVICES_ANDROID > ./key-dist/google-services.json | base64
+        env:
+          GOOGLE_SERVICES_ANDROID: ${{ secrets.GOOGLE_SERVICES_ANDROID }}
+      - name: Create file IOS google services file for firebase distribution For FCM
+        run: |
+          echo $GOOGLE_SERVICES_IOS > ./key-dist/GoogleService-Info.plist | base64
+        env:
+          GOOGLE_SERVICES_IOS: ${{ secrets.GOOGLE_SERVICES_IOS }}
+      - name: Create google service json for access play store file
+        run: |
+          echo $GHA_PUBLISH_JSON >> ./key-dist/GHA_PUBLISH_JSON.json | base64
+        env:
+          GHA_PUBLISH_JSON: ${{ secrets.GHA_PUBLISH_JSON }}
+      - name: Prepare Keystore
+        run: |
+          cd ./key-dist
+          echo "${{secrets.KEYSTORE}}" | base64 --decode >> keystore.jks
+      - name: Prepare Key.properties
+        run: |
+          cd ./key-dist
+          echo "storeFile=${GITHUB_WORKSPACE}/key-dist/keystore.jks" &>> key.properties
+          echo "keyPassword=${{secrets.KEYSTORE_PASSWORD}}" &>> key.properties
+          echo "keyAlias=${{secrets.KEYSTORE_KEY_ALIAS}}" &>> key.properties
+          echo "storePassword=${{secrets.KEYSTORE_KEY_PASSWORD}}" &>> key.properties
+      - name: Prepare ENV
+        run: |
+          cd ./key-dist
+          echo '${{secrets.ENV}}' >> env
+      - name: Upload to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: key-dist
+          path: ./key-dist
+          retention-days: 1
+          if-no-files-found: error
