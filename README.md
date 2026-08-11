@@ -35,6 +35,8 @@ Central repository of reusable GitHub Actions workflows (`workflow_call`) for al
 | `get-ci-environment.yaml` | Get ci environment | Resolves target environment name from branch/tag |
 | `get-tag.yaml` | Get tag | Reads the latest git tag |
 | `lastest-buildnumber-release.yaml` | Get latest build number from platform | Fetches latest iOS/Android build number from App Store / Play Store |
+| `next-build-number.yaml` | Next build number | Allocates a monotonic build number from the caller's `build/<n>` tags. Race-free, no platform API calls |
+| `prepare-key-dist.yaml` | Prepare key-dist artifact | Builds the `key-dist` artifact on its own, without a platform build-number query |
 | `test.yaml` | Test | Generic test runner |
 
 ## Prerequisites
