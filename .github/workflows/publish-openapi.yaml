@@ -56,15 +56,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           version: ${{ inputs.pnpm-version }}
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node-version }}
           cache: pnpm
@@ -107,7 +107,7 @@ jobs:
           service_account: ${{ inputs.service_account }}
 
       - name: Upload OpenAPI to GCS
-        uses: google-github-actions/upload-cloud-storage@v2
+        uses: google-github-actions/upload-cloud-storage@v3
         with:
           path: ${{ inputs.openapi-output-path }}
           destination: ${{ inputs.gcs-bucket }}/${{ inputs.environment }}/${{ inputs.service-name }}
