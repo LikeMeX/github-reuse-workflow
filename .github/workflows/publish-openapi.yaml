@@ -112,3 +112,4 @@ jobs:
           path: ${{ inputs.openapi-output-path }}
           destination: ${{ inputs.gcs-bucket }}/${{ inputs.environment }}/${{ inputs.service-name }}
           parent: false
+          process_gcloudignore: false
