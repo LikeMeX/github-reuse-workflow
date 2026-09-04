@@ -68,3 +68,4 @@ jobs:
           # Use inputs to build the destination path
           destination: '${{ inputs.gcs-bucket }}/${{ inputs.gcs-path }}/${{ github.ref_name }}/${{ steps.create_archive.outputs.date_path }}'
           parent: false # Do not create a parent directory with the file name
+          process_gcloudignore: false
