@@ -55,6 +55,9 @@ jobs:
           project_id: ${{ inputs.project_id }}
           workload_identity_provider: ${{ inputs.workload_identity_provider }}
           service_account: ${{ inputs.service_account }}
+          # Only the access token is used (docker login below). The credentials file would be written
+          # into the workspace, and Dockerfiles that `COPY . .` then bake it into the image.
+          create_credentials_file: false
 
       # -
       #   name: Set up QEMU
