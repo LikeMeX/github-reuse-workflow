@@ -12,6 +12,13 @@ on:
       docker-tag:
         required: true
         type: string
+      env-suffix:
+        # Append "-<environment>" to the image tag (skipped for production and when the tag already ends with it).
+        # dev/staging/enterprise-v2 push to one registry with the commit SHA as tag; without the suffix, two envs building
+        # the same commit overwrite each other's image, and NEXT_PUBLIC_* baked at build time point at the wrong env.
+        # Set false when docker-tag names an image built elsewhere or consumed outside this workflow.
+        type: boolean
+        default: true
       workload_identity_provider:
         required: true
         type: string
@@ -47,9 +54,21 @@ jobs:
           submodules: true
           token: ${{ secrets.GH_PAT || github.token }}
 
+      - name: Resolve image tag
+        id: tag
+        env:
+          TAG: ${{ inputs.docker-tag }}
+          ENV_NAME: ${{ inputs.environment }}
+          SUFFIX: ${{ inputs.env-suffix }}
+        run: |
+          if [ "$SUFFIX" = true ] && [ "$ENV_NAME" != production ] && [ "${TAG%-$ENV_NAME}" = "$TAG" ]; then
+            TAG="$TAG-$ENV_NAME"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
       - name: Copy values file
         run: |-
-          sed "s=<DOCKER_TAG>=${{ inputs.docker-tag }}=g" < ./deploy/values-${{ inputs.environment }}.yaml > ./deploy/values.yaml
+          sed "s=<DOCKER_TAG>=${{ steps.tag.outputs.tag }}=g" < ./deploy/values-${{ inputs.environment }}.yaml > ./deploy/values.yaml
 
       - name: Auth GCP
         id: auth
