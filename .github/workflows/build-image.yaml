@@ -2,9 +2,11 @@ name: Build image
 
 on:
   workflow_call:
-    # secrets:
-    #   workload_identity_provider:
-    #     required: true
+    secrets:
+      GH_PAT:
+        # Read access to private GitHub repos installed as git dependencies (e.g. LikeMeX/fs-contracts).
+        # Forwarded to BuildKit as the `gh_token` secret; Dockerfiles that don't mount it are unaffected.
+        required: false
     inputs:
       environment:
         required: true
@@ -110,3 +112,5 @@ jobs:
             CI_SHA=${{ inputs.docker-tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          secrets: |
+            gh_token=${{ secrets.GH_PAT }}
