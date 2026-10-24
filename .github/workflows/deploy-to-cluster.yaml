@@ -51,8 +51,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          submodules: true
           token: ${{ secrets.GH_PAT || github.token }}
+
+      # fs-app-chart is checked out by hand instead of `submodules: true`: the October 2026
+      # history rewrite changed every commit SHA, so many repos still pin chart commits that
+      # no longer exist. Use the pinned commit when it exists, otherwise fs-app-chart main.
+      - name: Checkout fs-app-chart
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          pin=$(git ls-tree HEAD fs-app-chart | awk '{print $3}')
+          rm -rf fs-app-chart
+          git clone --quiet "https://x-access-token:${GH_TOKEN}@github.com/LikeMeX/fs-app-chart.git" fs-app-chart
+          if [ -n "$pin" ] && git -C fs-app-chart cat-file -e "${pin}^{commit}" 2>/dev/null; then
+            git -C fs-app-chart checkout --quiet "$pin"
+          else
+            echo "::warning::fs-app-chart pin ${pin:-<none>} not found; deploying with fs-app-chart main ($(git -C fs-app-chart rev-parse --short HEAD))"
+          fi
 
       - name: Resolve image tag
         id: tag
