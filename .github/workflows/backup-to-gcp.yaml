@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # We need to fetch all history and tags to get a complete backup
           fetch-depth: 0
@@ -53,7 +53,7 @@ jobs:
 
       - name: Auth GCP 
         id: auth
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           token_format: 'access_token'
           project_id: ${{ inputs.project_id }}
@@ -61,7 +61,7 @@ jobs:
           service_account: ${{ inputs.service_account }}
 
       - name: Upload Backup to Google Cloud Storage
-        uses: 'google-github-actions/upload-cloud-storage@v3'
+        uses: 'google-github-actions/upload-cloud-storage@6397bd7208e18d13ba2619ee21b9873edc94427a' # v3
         with:
           # Get the archive file we just created
           path: '${{ steps.create_archive.outputs.archive_name }}'

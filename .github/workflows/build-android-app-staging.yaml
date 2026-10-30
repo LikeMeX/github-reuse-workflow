@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up git and fetch all history for all branches and tags
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           fetch-depth: 0
       - name: Aggressive early cleanup before any cache restore
@@ -65,18 +65,18 @@ jobs:
           echo "==== AFTER ===="
           df -h
       - name: Set up JDK 18
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           java-version: "18"
           distribution: "corretto"
           cache: gradle
       - name: Download a required file artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: key-dist
           path: ./key-dist
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
         with:
           ruby-version: "3.3.5"
       - name: move google services file
@@ -92,7 +92,7 @@ jobs:
           gem update --system
           cd ./android && bundle install
       - name: Set up Flutter SDK
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: "3.38.4"
           architecture: x64
@@ -110,7 +110,7 @@ jobs:
           cd ./android
           bundle exec fastlane staging
       - name: Free Disk Space (Cleanup)
-        uses: endersonmenezes/free-disk-space@v3
+        uses: endersonmenezes/free-disk-space@7901478139cff6e9d44df5972fd8ab8fcade4db1 # v3
         with:
           remove_android: true
           remove_folders: "./build ./android/app/build /home/runner/.pub-cache /opt/hostedtoolcache"

@@ -109,7 +109,7 @@ jobs:
           cd ./key-dist
           echo '${{secrets.ENV}}' >> env
       - name: Upload to artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: key-dist
           path: ./key-dist
@@ -124,17 +124,17 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - name: Current directory
         run: |
           ls -la
       - name: Download a required file artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: key-dist
           path: ./key-dist
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
         with:
           ruby-version: "3.3.5"
       - name: Bundle install for iOS Gemfile

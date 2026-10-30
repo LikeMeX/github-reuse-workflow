@@ -43,7 +43,7 @@ jobs:
       build_number: ${{ steps.allocate.outputs.build_number }}
     steps:
       - name: Checkout with full tag history
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_PAT || github.token }}

@@ -130,9 +130,9 @@ jobs:
       CI_ACTION: ${{ steps.ci-environment.outputs.CI_ACTION }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
-      - uses: FranzDiebold/github-env-vars-action@v2
+      - uses: FranzDiebold/github-env-vars-action@eca289d258cab206fbf074441d993b76882cdd5e # v2
 
       - name: CI Environment
         id: ci-environment
