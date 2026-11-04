@@ -19,8 +19,8 @@ on:
   workflow_call:
     secrets:
       FIREBASE_DISTRIBUTION_GOOGLE_SECREAT:
-        description: "Service account JSON for Firebase App Distribution"
-        required: true
+        description: "Service account JSON for Firebase App Distribution. Omit when the build jobs use keyless WIF (gcp_workload_identity_provider)."
+        required: false
       GOOGLE_SERVICES_ANDROID:
         description: "FCM for Android (google-services.json)"
         required: true
@@ -43,12 +43,16 @@ on:
         description: "keystore key password"
         required: true
       GHA_PUBLISH_JSON:
-        description: "Google Play publisher service account JSON. Only needed by prod lanes."
+        description: "Google Play publisher service account JSON. Only needed by prod lanes; omit with keyless WIF (gcp_play_service_account)."
         required: false
 
 jobs:
   create-required-file:
     runs-on: ubuntu-latest
+    env:
+      # secrets.* isn't allowed in step `if:`; expose presence (not the value) at job level.
+      HAS_FIREBASE_KEY: ${{ secrets.FIREBASE_DISTRIBUTION_GOOGLE_SECREAT != '' }}
+      HAS_PLAY_KEY: ${{ secrets.GHA_PUBLISH_JSON != '' }}
     steps:
       - name: Current directory
         run: |
@@ -57,6 +61,8 @@ jobs:
         run: |
           mkdir key-dist
       - name: Create file google services for access firebase distribution For Deploy
+        # Skipped when the secret isn't passed (keyless WIF callers) so no key lands in the artifact.
+        if: env.HAS_FIREBASE_KEY == 'true'
         run: |
           echo $DATA > ./key-dist/GOOGLE_SERVICES_JSON.json | base64
         env:
@@ -72,6 +78,8 @@ jobs:
         env:
           GOOGLE_SERVICES_IOS: ${{ secrets.GOOGLE_SERVICES_IOS }}
       - name: Create google service json for access play store file
+        # Skipped when the secret isn't passed (keyless WIF callers) so no key lands in the artifact.
+        if: env.HAS_PLAY_KEY == 'true'
         run: |
           echo $GHA_PUBLISH_JSON >> ./key-dist/GHA_PUBLISH_JSON.json | base64
         env:
