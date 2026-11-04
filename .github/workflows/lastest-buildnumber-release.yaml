@@ -12,6 +12,11 @@ on:
         type: string
         required: false
         default: ""
+      gcp_play_service_account:
+        description: "Keyless Google Play API: service account (added in Play Console) impersonated via the same WIF provider. When set, GHA_PUBLISH_JSON_STAGING is not written or used; the Android Fastfile reads PLAY_GOOGLE_CREDENTIALS. Needs fastlane >= 2.230."
+        type: string
+        required: false
+        default: ""
       environment:
         description: "Environment (staging or prod)"
         required: true
@@ -47,7 +52,7 @@ on:
         required: false # not needed with gcp_workload_identity_provider
       GHA_PUBLISH_JSON_STAGING:
         description: "GHA Publish JSON Staging"
-        required: true
+        required: false # not needed with gcp_play_service_account
       KEYSTORE:
         description: "keystore jks file"
         required: true
@@ -101,6 +106,8 @@ jobs:
         env:
           GOOGLE_SERVICES_IOS: ${{ secrets.GOOGLE_SERVICES_IOS }}
       - name: Create google service json for access play store file
+        # Legacy JSON-key path; skipped when the caller uses keyless WIF for Play.
+        if: inputs.gcp_play_service_account == ''
         run: |
           echo $GHA_PUBLISH_JSON_STAGING >> ./key-dist/GHA_PUBLISH_JSON.json | base64
         env:
@@ -145,6 +152,15 @@ jobs:
         with:
           name: key-dist
           path: ./key-dist
+      # Play first, Firebase last: the last auth step owns GOOGLE_APPLICATION_CREDENTIALS (ADC for Firebase);
+      # Play gets its own credentials file passed explicitly via PLAY_GOOGLE_CREDENTIALS.
+      - name: Authenticate to Google Cloud (keyless, Google Play API)
+        id: auth-play
+        if: inputs.gcp_play_service_account != ''
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+          service_account: ${{ inputs.gcp_play_service_account }}
       - name: Authenticate to Google Cloud (keyless, Firebase App Distribution)
         if: inputs.gcp_workload_identity_provider != ''
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
@@ -183,6 +199,7 @@ jobs:
         name: run android fastlane
         env:
           FIREBASE_DISTRIBUTION_ANDROID_APP_ID: ${{ secrets.FIREBASE_DISTRIBUTION_ANDROID_APP_ID }}
+          PLAY_GOOGLE_CREDENTIALS: ${{ steps.auth-play.outputs.credentials_file_path }}
         run: |
           cd ./android
           bundle exec fastlane add_plugin firebase_app_distribution
