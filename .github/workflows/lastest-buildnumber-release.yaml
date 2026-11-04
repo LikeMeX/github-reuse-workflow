@@ -2,6 +2,16 @@ name: Get lastest build number from platform
 on:
   workflow_call:
     inputs:
+      gcp_workload_identity_provider:
+        description: "Keyless Firebase App Distribution: WIF provider (projects/N/locations/global/workloadIdentityPools/P/providers/X). When set, no service-account JSON key is written or used. Caller job needs `permissions: id-token: write`."
+        type: string
+        required: false
+        default: ""
+      gcp_service_account:
+        description: "Service account impersonated via WIF (needs roles/firebaseappdistro.admin)."
+        type: string
+        required: false
+        default: ""
       environment:
         description: "Environment (staging or prod)"
         required: true
@@ -34,7 +44,7 @@ on:
         required: true
       FIREBASE_DISTRIBUTION_GOOGLE_SECREAT:
         description: "Firebase Distribution iOS App ID"
-        required: true
+        required: false # not needed with gcp_workload_identity_provider
       GHA_PUBLISH_JSON_STAGING:
         description: "GHA Publish JSON Staging"
         required: true
@@ -74,6 +84,8 @@ jobs:
         run: |
           mkdir key-dist
       - name: Create file google services for access firebase distribution For Deploy
+        # Legacy JSON-key path; skipped when the caller uses keyless WIF (the key would otherwise land in the key-dist artifact).
+        if: inputs.gcp_workload_identity_provider == ''
         run: |
           echo $DATA > ./key-dist/GOOGLE_SERVICES_JSON.json | base64
         env:
@@ -133,6 +145,12 @@ jobs:
         with:
           name: key-dist
           path: ./key-dist
+      - name: Authenticate to Google Cloud (keyless, Firebase App Distribution)
+        if: inputs.gcp_workload_identity_provider != ''
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
+          service_account: ${{ inputs.gcp_service_account }}
       - name: Set up Ruby
         uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
         with:
