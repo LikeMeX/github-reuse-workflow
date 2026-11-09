@@ -67,7 +67,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
         with:
-          ruby-version: "3.3.5"
+          ruby-version: "3.3"
       - name: move google services file
         run: |
           mv ./key-dist/GoogleService-Info.plist ./ios/Runner/GoogleService-Info.plist
